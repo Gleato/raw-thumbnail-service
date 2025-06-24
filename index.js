@@ -25,16 +25,32 @@ app.post("/generate-thumbnail", async (req, res) => {
 
     // 2. Extract JPEG thumbnail with ExifTool
     await new Promise((resolve, reject) => {
-      exec(`exiftool -b -PreviewImage ${rawPath} > ${thumbPath}`, (err) => {
-        if (err) reject(err);
-        else resolve();
+      exec(`exiftool -b -PreviewImage ${rawPath} > ${thumbPath}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error("ExifTool error:", err);
+          console.error("ExifTool stderr:", stderr);
+          reject(err);
+        } else {
+          console.log("ExifTool extraction successful");
+          resolve();
+        }
       });
     });
 
-    // 3. Upload to Convex using the given signed URL
-    const thumbnailBuffer = fs.readFileSync(thumbPath);
+    // Check if thumbnail was created and has content
+    if (!fs.existsSync(thumbPath)) {
+      throw new Error("Thumbnail file was not created by ExifTool");
+    }
 
-    await axios.put(uploadUrl, thumbnailBuffer, {
+    const thumbnailBuffer = fs.readFileSync(thumbPath);
+    if (thumbnailBuffer.length === 0) {
+      throw new Error("Thumbnail file is empty - ExifTool may not have found a preview image");
+    }
+
+    console.log(`Thumbnail extracted: ${thumbnailBuffer.length} bytes`);
+
+    // 3. Upload to Convex using POST method (not PUT)
+    await axios.post(uploadUrl, thumbnailBuffer, {
       headers: {
         "Content-Type": "image/jpeg",
         "Content-Length": thumbnailBuffer.length,
