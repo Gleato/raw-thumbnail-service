@@ -33,9 +33,16 @@ app.post("/generate-thumbnail", async (req, res) => {
 
     // 3. Upload to Convex using the given signed URL
     const fileBuffer = fs.readFileSync(thumbPath);
-    await axios.put(uploadUrl, fileBuffer, {
-      headers: { "Content-Type": "image/jpeg" },
-    });
+    const fs = require("fs");
+
+const thumbnailBuffer = fs.readFileSync(thumbPath);
+
+await axios.put(uploadUrl, thumbnailBuffer, {
+  headers: {
+    "Content-Type": "image/jpeg",
+    "Content-Length": thumbnailBuffer.length,
+  },
+});
 
     // 4. Respond to caller
     return res.json({ success: true });
