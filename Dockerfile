@@ -49,12 +49,12 @@ RUN npm ci --only=production
 # Copy your Node app code
 COPY . .
 
-# Create a script to run darktable-cli with virtual display
-RUN echo '#!/bin/bash\nxvfb-run -a --server-args="-screen 0 1024x768x24" darktable-cli "$@"' > /usr/local/bin/darktable-cli-headless \
+# Create a script to run darktable-cli with virtual display and memory optimization
+RUN echo '#!/bin/bash\nexport MALLOC_ARENA_MAX=2\nexport MALLOC_MMAP_THRESHOLD_=131072\nxvfb-run -a --server-args="-screen 0 800x600x24" darktable-cli "$@"' > /usr/local/bin/darktable-cli-headless \
     && chmod +x /usr/local/bin/darktable-cli-headless
 
 # Expose the port
 EXPOSE 3000
 
-# Start the app
-CMD ["node", "index.js"]
+# Start the app with memory optimization
+CMD ["node", "--max-old-space-size=400", "index.js"]
