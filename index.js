@@ -37,8 +37,8 @@ app.post("/generate-thumbnail", async (req, res) => {
       rawWriter.on("error", reject);
     });
 
-    // Convert with darktable-cli
-    await execPromise(`darktable-cli "${rawPath}" "${jpgPath}" --width 1920 --height 1080 --hq true`);
+    // Convert with darktable-cli using virtual display
+    await execPromise(`darktable-cli-headless "${rawPath}" "${jpgPath}" --width 1920 --height 1080 --hq true`);
 
     // Upload to Convex
     const jpegBuffer = fs.readFileSync(jpgPath);
